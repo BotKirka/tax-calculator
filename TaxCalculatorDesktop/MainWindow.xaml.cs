@@ -18,6 +18,8 @@ namespace TaxCalculatorDesktop
     {
         public MainWindow()
         {
+            this.DataContext = new MainWindowViewModel();
+            
             InitializeComponent();
         }
     }
