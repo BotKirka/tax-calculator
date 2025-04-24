@@ -23,6 +23,8 @@ namespace TaxCalculatorDesktop
         private readonly TwoLevelTax _bituahLeumiTaxes;
         private readonly TwoLevelTax _kupatHolimTaxes;
 
+        private readonly int _accuracy;
+
         [ObservableProperty]
         private decimal _brutto;
 
@@ -66,6 +68,9 @@ namespace TaxCalculatorDesktop
             _kupatHolimTaxes = Mime.ConfigurationFile.GetSection("TaxData:KupatHolim").Get<TwoLevelTax>()!;
 
             _taxLevels = Mime.ConfigurationFile.GetSection("TaxData:IncomeTaxLevels").Get<Dictionary<string, TaxLevel>>()!;
+
+            _accuracy = JsonConvert.DeserializeObject<int>
+                (Mime.ConfigurationFile.GetRequiredSection("TaxData:Accuracy").Value!);
         }
 
         [RelayCommand(CanExecute = nameof(CanCalculateNetto))]
@@ -74,8 +79,22 @@ namespace TaxCalculatorDesktop
             var taxBase = CalculateTaxBase();
 
             var taxesPerLevel = CalculateIncomeTaxPerLevel(taxBase, _taxLevels);
+
+            var bituahLeumi = CalculateTwoLevelTaxes(taxBase, _bituahLeumiTaxes);
+
+            var kupatHolim = CalculateTwoLevelTaxes(taxBase, _kupatHolimTaxes);
+
+            var sumOfIncomeTaxes = taxesPerLevel.Last().Value;
+            var sumOfBituahLeumi = bituahLeumi.Last().Value;
+            var sumOfKupatHolim = kupatHolim.Last().Value;
+
+            var nekudot = CalculateNekudot();
+            if(nekudot > sumOfIncomeTaxes) nekudot = sumOfIncomeTaxes;
+
+            Netto = Math.Round(taxBase - sumOfIncomeTaxes - sumOfBituahLeumi - sumOfKupatHolim + nekudot, _accuracy);
         }
 
+        // moneyToEducation & moneyToPension will make global for this VM and make ObservableProperty like Brutto and Netto
         private decimal CalculateTaxBase()
         {
             var moneyToEducation = CalculateEducationTaxes();
@@ -99,7 +118,7 @@ namespace TaxCalculatorDesktop
 
         private TwoSideTax CalculateEducationTaxes()
         {
-            if (!HaveEducationFond) return null;
+            if (!HaveEducationFond) return new TwoSideTax() { TaxByEmployee = 0, TaxByEmployer = 0 };
 
             var educationTaxByEmployee = Brutto * _educationPercentByEmployee;
             var educationTaxByEmployer = Brutto * _educationPercentByEmployer;
@@ -115,13 +134,6 @@ namespace TaxCalculatorDesktop
             return _baseNekudValue * nekudotCount;
         }
 
-        private bool CanCalculateNetto()
-        {
-            if (Brutto > 0) return true;
-
-            return false;
-        }
-
         public Dictionary<string, decimal> CalculateIncomeTaxPerLevel(decimal taxBase, Dictionary<string, TaxLevel> taxLevels)
         {
             var orderedLevels = taxLevels
@@ -131,6 +143,7 @@ namespace TaxCalculatorDesktop
             var result = new Dictionary<string, decimal>();
             decimal previousThreshold = 0;
 
+            var sumOfLevels = 0m;
             foreach (var kvp in orderedLevels)
             {
                 string levelName = kvp.Key;
@@ -142,7 +155,9 @@ namespace TaxCalculatorDesktop
                 if (taxableValueAtThisLevel > 0)
                 {
                     decimal tax = taxableValueAtThisLevel * level.Rate;
-                    result[levelName] = Math.Round(tax, 3);
+                    result[levelName] = Math.Round(tax, _accuracy);
+
+                    sumOfLevels += tax;
                 }
                 else
                 {
@@ -155,7 +170,35 @@ namespace TaxCalculatorDesktop
                 previousThreshold = upperLimit;
             }
 
+            result[sumOfLevels.ToString()] = sumOfLevels;
+
             return result;
+        }
+
+        private Dictionary<string, decimal> CalculateTwoLevelTaxes(decimal taxBase, TwoLevelTax twoLevelTax)
+        {
+            var result = new Dictionary<string, decimal>();
+
+            decimal amountLower = Math.Min(taxBase, twoLevelTax.LowerThreshold);
+            decimal amountUpper = Math.Max(0, taxBase - twoLevelTax.LowerThreshold);
+
+            decimal taxLower = Math.Round(amountLower * twoLevelTax.LowerRate, _accuracy);
+            decimal taxUpper = Math.Round(amountUpper * twoLevelTax.UpperRate, _accuracy);
+
+            result[taxLower.ToString()] = taxLower;
+            result[taxUpper.ToString()] = taxUpper;
+
+            var sumOfLevels = 0m;
+            result[sumOfLevels.ToString()] = sumOfLevels;
+
+            return result;
+        }
+
+        private bool CanCalculateNetto()
+        {
+            if (Brutto > 0) return true;
+
+            return false;
         }
     }
 }
