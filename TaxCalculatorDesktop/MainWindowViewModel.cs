@@ -12,9 +12,9 @@ namespace TaxCalculatorDesktop
     partial class MainWindowViewModel
     {
         private readonly decimal _pensionPercentByEmployee;
-        //private readonly decimal _pensionPercentByEmployer;
+        private readonly decimal _pensionPercentByEmployer;
         private readonly decimal _educationPercentByEmployee;
-        //private readonly decimal _educationPercentByEmployer;
+        private readonly decimal _educationPercentByEmployer;
         private readonly decimal _baseNekudValue;
         private readonly decimal _baseCountNekudot;
         private readonly decimal _aditionalNekudotForWomen;
@@ -43,8 +43,14 @@ namespace TaxCalculatorDesktop
             _pensionPercentByEmployee = JsonConvert.DeserializeObject<decimal>
                 (Mime.ConfigurationFile.GetRequiredSection("TaxData:PensionPercentByEmployee").Value!);
 
+            _pensionPercentByEmployer = JsonConvert.DeserializeObject<decimal>
+                (Mime.ConfigurationFile.GetRequiredSection("TaxData:PensionPercentByEmployer").Value!);
+
             _educationPercentByEmployee = JsonConvert.DeserializeObject<decimal>
                 (Mime.ConfigurationFile.GetRequiredSection("TaxData:EducationFondPercentByEmployee").Value!);
+
+            _educationPercentByEmployer = JsonConvert.DeserializeObject<decimal>
+                (Mime.ConfigurationFile.GetRequiredSection("TaxData:EducationFondPercentByEmployer").Value!);
 
             _baseNekudValue = JsonConvert.DeserializeObject<decimal>
                 (Mime.ConfigurationFile.GetRequiredSection("TaxData:BaseNekudValue").Value!);
@@ -72,17 +78,41 @@ namespace TaxCalculatorDesktop
 
         private decimal CalculateTaxBase()
         {
-            decimal educationTax = 0;
-            if (HaveEducationFond) educationTax = _educationPercentByEmployee;
+            var moneyToEducation = CalculateEducationTaxes();
+            var moneyToPension = CalculatePension();
 
-            decimal pensionTax = _pensionPercentByEmployee;
+            var taxBase = Brutto - moneyToEducation.TaxByEmployee - moneyToPension.TaxByEmployee;
+
+            return taxBase;
+        }
+
+        private TwoSideTax CalculatePension()
+        {
+            var pensionTax = _pensionPercentByEmployee;
             if (PensionType is PensionEnum.EightyPecent) pensionTax *= 0.8m;
 
-            // for future things
-            /*var moneyToEducation = Brutto * educationTax;
-            var moneyToPension = Brutto * pensionTax;*/
+            var pensionByEmployee = Brutto * pensionTax;
+            var pensionByEmployer = Brutto * _pensionPercentByEmployer;
 
-            return Brutto * (1 - educationTax - pensionTax);
+            return new TwoSideTax() { TaxByEmployee = pensionByEmployee, TaxByEmployer = pensionByEmployer };
+        }
+
+        private TwoSideTax CalculateEducationTaxes()
+        {
+            if (!HaveEducationFond) return null;
+
+            var educationTaxByEmployee = Brutto * _educationPercentByEmployee;
+            var educationTaxByEmployer = Brutto * _educationPercentByEmployer;
+
+            return new TwoSideTax() { TaxByEmployee = educationTaxByEmployee, TaxByEmployer = educationTaxByEmployer };
+        }
+
+        private decimal CalculateNekudot()
+        {
+            var nekudotCount = _baseCountNekudot;
+            if (SexType is SexEnum.Woman) nekudotCount += _aditionalNekudotForWomen;
+
+            return _baseNekudValue * nekudotCount;
         }
 
         private bool CanCalculateNetto()
