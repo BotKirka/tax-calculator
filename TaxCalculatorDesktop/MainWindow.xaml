@@ -60,25 +60,28 @@
                 <TextBlock Text="Information about taxes:" FontWeight="Bold" Margin="0,20,0,10"/>
 
                 <TextBlock Text="Pension tax by employee:"/>
-                <TextBlock Text="{Binding PensionEmployeeFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding PensionByEmployee}" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Pension tax by employer:"/>
-                <TextBlock Text="{Binding PensionEmployerFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding PensionByEmployer}" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Education fond by employee:"/>
-                <TextBlock Text="{Binding EducationFondEmployeeFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding EducationByEmployee}" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Education fond by employer:"/>
-                <TextBlock Text="{Binding EducationFondEmployerFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding EducationByEmployer}" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Income taxes:"/>
-                <TextBlock Text="{Binding IncomeTaxFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding IncomeTaxes}" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Bituah Leumi:"/>
-                <TextBlock Text="{Binding BituahLeumiFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding BituahLeumi}" Margin="0,0,0,10"/>
 
                 <TextBlock Text="Kupat Holim:"/>
-                <TextBlock Text="{Binding KupatHolimFormatted}" Margin="0,0,0,10"/>
+                <TextBlock Text="{Binding KupatHolim}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Nekudot:"/>
+                <TextBlock Text="{Binding Nekudot}" Margin="0,0,0,10"/>
 
             </StackPanel>
 

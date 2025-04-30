@@ -40,6 +40,15 @@ namespace TaxCalculatorDesktop
         [ObservableProperty]
         private bool _haveEducationFond;
 
+        [ObservableProperty] private decimal _educationByEmployee;
+        [ObservableProperty] private decimal _educationByEmployer;
+        [ObservableProperty] private decimal _pensionByEmployee;
+        [ObservableProperty] private decimal _pensionByEmployer;
+        [ObservableProperty] private decimal _bituahLeumi;
+        [ObservableProperty] private decimal _kupatHolim;
+        [ObservableProperty] private decimal _incomeTaxes;
+        [ObservableProperty] private decimal _nekudot;
+
         public MainWindowViewModel()
         {
             _pensionPercentByEmployee = JsonConvert.DeserializeObject<decimal>
@@ -84,14 +93,14 @@ namespace TaxCalculatorDesktop
 
             var kupatHolim = CalculateTwoLevelTaxes(taxBase, _kupatHolimTaxes);
 
-            var sumOfIncomeTaxes = taxesPerLevel.Last().Value;
-            var sumOfBituahLeumi = bituahLeumi.Last().Value;
-            var sumOfKupatHolim = kupatHolim.Last().Value;
+            IncomeTaxes = taxesPerLevel.Last().Value;
+            BituahLeumi = bituahLeumi.Last().Value;
+            KupatHolim = kupatHolim.Last().Value;
 
-            var nekudot = CalculateNekudot();
-            if(nekudot > sumOfIncomeTaxes) nekudot = sumOfIncomeTaxes;
+            Nekudot = CalculateNekudot();
+            if(Nekudot > IncomeTaxes) Nekudot = IncomeTaxes;
 
-            Netto = Math.Round(taxBase - sumOfIncomeTaxes - sumOfBituahLeumi - sumOfKupatHolim + nekudot, _accuracy);
+            Netto = Math.Round(taxBase - IncomeTaxes - BituahLeumi - KupatHolim + Nekudot, _accuracy);
         }
         
         private decimal CalculateTaxBase()
@@ -109,20 +118,20 @@ namespace TaxCalculatorDesktop
             var pensionTax = _pensionPercentByEmployee;
             if (PensionType is PensionEnum.EightyPecent) pensionTax *= 0.8m;
 
-            var pensionByEmployee = Brutto * pensionTax;
-            var pensionByEmployer = Brutto * _pensionPercentByEmployer;
+            PensionByEmployee = Brutto * pensionTax;
+            PensionByEmployer = Brutto * _pensionPercentByEmployer;
 
-            return new TwoSideTax() { TaxByEmployee = pensionByEmployee, TaxByEmployer = pensionByEmployer };
+            return new TwoSideTax() { TaxByEmployee = PensionByEmployee, TaxByEmployer = PensionByEmployer };
         }
 
         private TwoSideTax CalculateEducationTaxes()
         {
             if (!HaveEducationFond) return new TwoSideTax() { TaxByEmployee = 0, TaxByEmployer = 0 };
 
-            var educationTaxByEmployee = Brutto * _educationPercentByEmployee;
-            var educationTaxByEmployer = Brutto * _educationPercentByEmployer;
+            EducationByEmployee = Brutto * _educationPercentByEmployee;
+            EducationByEmployer = Brutto * _educationPercentByEmployer;
 
-            return new TwoSideTax() { TaxByEmployee = educationTaxByEmployee, TaxByEmployer = educationTaxByEmployer };
+            return new TwoSideTax() { TaxByEmployee = EducationByEmployee, TaxByEmployer = EducationByEmployer };
         }
 
         private decimal CalculateNekudot()
@@ -184,11 +193,11 @@ namespace TaxCalculatorDesktop
             decimal taxLower = Math.Round(amountLower * twoLevelTax.LowerRate, _accuracy);
             decimal taxUpper = Math.Round(amountUpper * twoLevelTax.UpperRate, _accuracy);
 
-            result[taxLower.ToString()] = taxLower;
-            result[taxUpper.ToString()] = taxUpper;
+            result[nameof(taxLower)] = taxLower;
+            result[nameof(taxUpper)] = taxUpper;
 
-            var sumOfLevels = 0m;
-            result[sumOfLevels.ToString()] = sumOfLevels;
+            var sumOfLevels = taxLower + taxUpper;
+            result[nameof(sumOfLevels)] = sumOfLevels;
 
             return result;
         }
