@@ -74,7 +74,7 @@ namespace TaxCalculatorDesktop
         }
 
         [RelayCommand(CanExecute = nameof(CanCalculateNetto))]
-        public async Task CalculateNetto()
+        public void CalculateNetto()
         {
             var taxBase = CalculateTaxBase();
 
@@ -93,8 +93,7 @@ namespace TaxCalculatorDesktop
 
             Netto = Math.Round(taxBase - sumOfIncomeTaxes - sumOfBituahLeumi - sumOfKupatHolim + nekudot, _accuracy);
         }
-
-        // moneyToEducation & moneyToPension will make global for this VM and make ObservableProperty like Brutto and Netto
+        
         private decimal CalculateTaxBase()
         {
             var moneyToEducation = CalculateEducationTaxes();

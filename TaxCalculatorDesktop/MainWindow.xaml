@@ -3,34 +3,85 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TaxCalculatorDesktop"
+        xmlns:local="clr-namespace:TaxCalculatorDesktop" 
+        xmlns:enums="clr-namespace:TaxCalculatorDesktop.Models.Enums"
         mc:Ignorable="d"
         
         d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
         
         Title="Israel taxes calculator" Height="600" Width="500">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
+    <Window.Resources>
+        <ObjectDataProvider x:Key="PensionTypeData"
+                            ObjectType="{x:Type enums:PensionEnum}"
+                            MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enums:PensionEnum" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
 
-            <TextBlock Text="Brutto: " Margin="5"/>
+        <ObjectDataProvider x:Key="SexTypeData"
+                    ObjectType="{x:Type enums:SexEnum}"
+                    MethodName="GetValues">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enums:SexEnum" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
 
-            <TextBox Grid.Column="1" Text="{Binding Brutto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="True"/>
-        </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="Your brutto salary:" FontWeight="Bold" />
+            <TextBox Text="{Binding Brutto, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                     Margin="0,5,0,10"/>
 
-        <Label Grid.Row="1" Content="{Binding Netto}"/>
+            <TextBlock Text="Sex:" FontWeight="Bold" />
+            <ComboBox ItemsSource="{Binding Source={StaticResource SexTypeData}}"
+                      SelectedItem="{Binding SexType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                      Margin="0,5,0,10"/>
 
-        <Button Grid.Row="2" Content="Count" 
-                Command="{Binding CalculateNettoCommand}"
-                CommandParameter="{Binding Brutto}"/>
-    </Grid>
+            <TextBlock Text="Type of pension:" FontWeight="Bold" />
+            <ComboBox ItemsSource="{Binding Source={StaticResource PensionTypeData}}"
+                      SelectedItem="{Binding PensionType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                      Margin="0,5,0,10"/>
+
+            <CheckBox Content="Have you education fond?" 
+                      IsChecked="{Binding HaveEducationFond, Mode=TwoWay}" Margin="0,10,0,20"/>
+
+            <Button Content="Count" 
+                    Command="{Binding CalculateNettoCommand}" CommandParameter="{Binding Brutto}" 
+                    Height="40" Background="LightGreen" FontWeight="Bold"/>
+
+            <StackPanel Margin="0,30,0,0">
+                <TextBlock Text="Results:" FontSize="16" FontWeight="Bold" />
+
+                <TextBlock Text="{Binding Netto, StringFormat='Netto: {0:C}'}" Margin="0,5" />
+
+                <TextBlock Text="Information about taxes:" FontWeight="Bold" Margin="0,20,0,10"/>
+
+                <TextBlock Text="Pension tax by employee:"/>
+                <TextBlock Text="{Binding PensionEmployeeFormatted}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Pension tax by employer:"/>
+                <TextBlock Text="{Binding PensionEmployerFormatted}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Education fond by employee:"/>
+                <TextBlock Text="{Binding EducationFondEmployeeFormatted}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Education fond by employer:"/>
+                <TextBlock Text="{Binding EducationFondEmployerFormatted}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Income taxes:"/>
+                <TextBlock Text="{Binding IncomeTaxFormatted}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Bituah Leumi:"/>
+                <TextBlock Text="{Binding BituahLeumiFormatted}" Margin="0,0,0,10"/>
+
+                <TextBlock Text="Kupat Holim:"/>
+                <TextBlock Text="{Binding KupatHolimFormatted}" Margin="0,0,0,10"/>
+
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
 </Window>
