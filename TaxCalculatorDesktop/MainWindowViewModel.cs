@@ -178,7 +178,7 @@ namespace TaxCalculatorDesktop
                 previousThreshold = upperLimit;
             }
 
-            result[sumOfLevels.ToString()] = sumOfLevels;
+            result[nameof(sumOfLevels)] = sumOfLevels;
 
             return result;
         }
